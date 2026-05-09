@@ -29,3 +29,4 @@ wiki/data/*
 !wiki/data/data/
 wiki/data/data/*
 !wiki/data/data/pages/
+!README.md
