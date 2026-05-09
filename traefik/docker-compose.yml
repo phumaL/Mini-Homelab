@@ -20,7 +20,7 @@ services:
       - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_USERS}"
 
   dnsmasq:
-    image: 4km3/dnsmasq:2.90
+    image: 4km3/dnsmasq:2.90-r3
     container_name: dnsmasq
     restart: unless-stopped
     ports:
