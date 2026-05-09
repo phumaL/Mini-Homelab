@@ -1,0 +1,23 @@
+# Secret files - never commit
+**/.env
+
+# .md files
+*.md
+
+# Service data volumes
+gitea/data/
+gitea/db/
+immich/db/
+immich/photos/
+stirling-pdf/configs/
+stirling-pdf/logs/
+
+# Generic dirs
+data/
+logs/
+config/
+configs/
+db/
+
+# Traefik runtime files
+traefik/logs/

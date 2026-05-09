@@ -1,0 +1,18 @@
+api:
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: proxy
+
+log:
+  filePath: /var/log/traefik/traefik.log
+  level: INFO
+
+accessLog:
+  filePath: /var/log/traefik/access.log
