@@ -1,6 +1,6 @@
 services:
   immich-server:
-    image: ghcr.io/immich-app/immich-server:release
+    image: ghcr.io/immich-app/immich-server:v1.117.0
     container_name: immich-server
     restart: unless-stopped
     volumes:
@@ -13,8 +13,10 @@ services:
       - DB_DATABASE_NAME=${DB_DATABASE_NAME}
       - REDIS_HOSTNAME=immich-redis
     depends_on:
-      - immich-redis
-      - immich-db
+      immich-redis:
+        condition: service_healthy
+      immich-db:
+        condition: service_healthy
     networks:
       - proxy
       - internal
@@ -25,7 +27,7 @@ services:
       - "traefik.http.services.immich.loadbalancer.server.port=2283"
 
   immich-machine-learning:
-    image: ghcr.io/immich-app/immich-machine-learning:release
+    image: ghcr.io/immich-app/immich-machine-learning:v1.117.0
     container_name: immich-machine-learning
     restart: unless-stopped
     volumes:
@@ -37,6 +39,11 @@ services:
     image: redis:6.2-alpine
     container_name: immich-redis
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
@@ -52,6 +59,11 @@ services:
       - POSTGRES_DB=${DB_DATABASE_NAME}
     volumes:
       - ./db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 

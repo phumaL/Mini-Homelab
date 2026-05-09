@@ -1,12 +1,13 @@
 services:
   stirling-pdf:
-    image: stirlingtools/stirling-pdf:latest
+    image: stirlingtools/stirling-pdf:0.38.1
     container_name: stirling-pdf
     restart: unless-stopped
     volumes:
       - ./configs:/configs
       - ./logs:/logs
     environment:
+      # Security features disabled; acceptable on a trusted LAN — do not expose to the internet.
       - DOCKER_ENABLE_SECURITY=false
       - LANGS=en_GB
     networks:

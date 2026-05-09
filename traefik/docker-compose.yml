@@ -16,14 +16,16 @@ services:
       - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.local`)"
       - "traefik.http.routers.traefik-dashboard.entrypoints=web"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_USERS}"
 
   dnsmasq:
-    image: 4km3/dnsmasq:latest
+    image: 4km3/dnsmasq:2.90
     container_name: dnsmasq
     restart: unless-stopped
     ports:
-      - "192.168.56.3:53:53/udp"
-      - "192.168.56.3:53:53/tcp"
+      - "${HOST_IP}:53:53/udp"
+      - "${HOST_IP}:53:53/tcp"
     volumes:
       - ./dnsmasq.conf:/etc/dnsmasq.conf:ro
     cap_add:

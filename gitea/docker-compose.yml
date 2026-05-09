@@ -1,6 +1,6 @@
 services:
   gitea:
-    image: gitea/gitea:latest
+    image: gitea/gitea:1.22.3
     container_name: gitea
     restart: unless-stopped
     environment:
@@ -19,7 +19,8 @@ services:
       - proxy
       - internal
     depends_on:
-      - gitea-db
+      gitea-db:
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gitea.rule=Host(`gitea.local`)"
@@ -36,6 +37,11 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - ./db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 

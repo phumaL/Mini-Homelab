@@ -11,6 +11,7 @@ immich/db/
 immich/photos/
 stirling-pdf/configs/
 stirling-pdf/logs/
+wiki/data/
 
 # Generic dirs
 data/
