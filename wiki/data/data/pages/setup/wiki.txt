@@ -1,0 +1,181 @@
+====== DokuWiki — This Wiki ======
+
+**Prerequisite:** [[setup:traefik|Traefik & dnsmasq]] running.
+
+----
+
+===== What DokuWiki Provides =====
+
+DokuWiki is a flat-file wiki — pages are stored as plain ''.txt'' files on disk.  No database is required.  This makes it:
+
+  * Simple to back up (copy the ''data/pages/'' directory).
+  * Easy to version-control (plain text files in git).
+  * Fast to deploy (single container, no external dependencies).
+
+This wiki is served at ''http:%%//%%wiki.local'' through Traefik and documents the entire home server stack.
+
+----
+
+===== File Overview =====
+
+<code>
+wiki/
+├── docker-compose.yml
+└── data/
+    ├── pages/           # Wiki page content (.txt files)
+    │   ├── start.txt
+    │   ├── problem.txt
+    │   ├── architecture.txt
+    │   └── setup/
+    │       ├── prerequisites.txt
+    │       ├── traefik.txt
+    │       ├── gitea.txt
+    │       ├── immich.txt
+    │       ├── stirling.txt
+    │       └── wiki.txt
+    └── ...              # DokuWiki runtime files (created at startup)
+</code>
+
+The ''wiki/data/'' directory is mounted into the container as ''/storage''.  DokuWiki reads pages from ''/storage/pages/''.
+
+----
+
+===== docker-compose.yml Explained =====
+
+<code>
+services:
+  wiki:
+    image: dokuwiki/dokuwiki:2024-02-06a
+    restart: unless-stopped
+    volumes:
+      - ./data:/storage
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wiki.rule=Host(`wiki.local`)"
+      - "traefik.http.routers.wiki.entrypoints=web"
+      - "traefik.http.services.wiki.loadbalancer.server.port=8080"
+</code>
+
+The volume mount ''./data:/storage'' means:
+  * Pages committed to the git repo under ''wiki/data/pages/'' are immediately available in the container.
+  * Any edits made through the DokuWiki web UI are written back to the same directory on the host.
+
+----
+
+===== Step-by-Step Deployment =====
+
+==== Step 1: Ensure wiki/data/pages/ exists ====
+
+The page files must exist before the container starts (they are already committed to the repository):
+
+<code>
+ls wiki/data/pages/
+# Should list: start.txt  problem.txt  architecture.txt  setup/
+</code>
+
+==== Step 2: Start the container ====
+
+<code>
+docker compose -f wiki/docker-compose.yml up -d
+</code>
+
+==== Step 3: Verify ====
+
+<code>
+docker compose -f wiki/docker-compose.yml ps
+# Should show: wiki   Up
+</code>
+
+<code>
+docker logs wiki --tail 20
+# Should show Apache/PHP startup messages with no errors
+</code>
+
+==== Step 4: Open the wiki ====
+
+Navigate to ''http:%%//%%wiki.local'' in a browser.  The home page (''start.txt'') should load with the table of contents.
+
+==== Step 5: Run the installer (first run only) ====
+
+On first launch, DokuWiki shows an installer at ''http:%%//%%wiki.local/install.php'':
+
+  - **Wiki Name**: Home Lab Server
+  - **Superuser**: set an admin username and password
+  - **ACL Policy**: Select **Closed Wiki** (only logged-in users can read/edit) or **Public Wiki** (anyone on the LAN can read).  For a personal home lab, **Public Wiki** is convenient.
+  - Click **Save**.
+
+The installer creates configuration files in ''wiki/data/''.  It should not be run again.
+
+----
+
+===== DokuWiki Markup Reference =====
+
+Pages use DokuWiki's own markup.  Quick reference:
+
+<code>
+====== Heading 1 ======
+===== Heading 2 =====
+==== Heading 3 ====
+
+**bold**   //italic//   ''monospace''
+
+[[page-name|Link text]]            ← internal link
+[[https://example.com|Link text]]  ← external link
+
+  * Bullet item
+  - Numbered item
+
+^ Column 1 ^ Column 2 ^    ← table header row
+| Cell 1   | Cell 2   |
+
+<code>
+command here
+</code >
+</code>
+
+Namespaces (subdirectories) are written with colons: ''[[setup:gitea|Gitea]]'' links to ''setup/gitea.txt''.
+
+----
+
+===== How This Wiki Was Built =====
+
+The wiki pages were authored as plain ''.txt'' files in the ''wiki/data/pages/'' directory of the project repository using DokuWiki markup.  They were committed to git alongside the Docker Compose configuration for each service.
+
+This approach means:
+  * The full wiki is version-controlled.
+  * Pages can be reviewed and edited in any text editor.
+  * The wiki is ready to serve immediately after ''docker compose up'' — no manual page entry through a web form.
+
+----
+
+===== Exporting the Wiki to PDF =====
+
+To produce a PDF for submission:
+
+**Option A — Browser print-to-PDF (simplest)**
+
+  - Open each wiki page in the browser.
+  - Press ''Ctrl+P'' → set destination to **Save as PDF** → Save.
+  - Combine the individual PDFs using Stirling PDF (''http:%%//%%stirling.local'' → **Merge PDFs**).
+
+**Option B — DokuWiki PDF export plugin**
+
+  - Log in as admin at ''http:%%//%%wiki.local''.
+  - Admin → Extension Manager → search for **dw2pdf** → Install.
+  - A PDF icon appears on each page.
+
+----
+
+===== Troubleshooting =====
+
+^ Symptom                         ^ Likely Cause                     ^ Fix                                        ^
+| ''http:%%//%%wiki.local'' not loading | Traefik not running              | Start Traefik stack first                  |
+| Pages show "page not found"       | ''.txt'' files not in correct path | Confirm ''wiki/data/pages/start.txt'' exists |
+| Installer re-appears              | ''conf/local.php'' missing       | Re-run installer or restore from backup    |
+| Edits not saving                  | Permission issue on ''data/''    | ''sudo chown -R 1000:1000 wiki/data/''     |
+
+----
+
+**Wiki complete.** Return to [[start|Home]].

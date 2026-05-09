@@ -1,0 +1,116 @@
+====== Home Lab Server — Project Wiki ======
+
+Self-hosted home server stack | Final Milestone PMF W13 | IT28X97 @ UJ\\
+Docker · Traefik · dnsmasq · Gitea · Immich · Stirling PDF · DokuWiki
+
+----
+
+===== Navigation =====
+
+^ # ^ Page ^ What it covers ^
+| 1 | **[[problem|Problem Statement & Service Rationale]]** | Why this stack exists; why each service was chosen; alternatives rejected |
+| 2 | **[[architecture|Architecture & Network Topology]]** | ASCII diagram; Docker networks; container table; DNS flow; startup order |
+| 3.1 | **[[setup:prerequisites|Prerequisites]]** | VirtualBox, Ubuntu, Docker install, proxy network, host DNS config |
+| 3.2 | **[[setup:traefik|Traefik & dnsmasq]]** | Wildcard DNS, HTTP routing, dashboard Basic Auth, step-by-step deploy |
+| 3.3 | **[[setup:gitea|Gitea — Self-Hosted Git]]** | Git server, Postgres, SSH push, web installer, healthcheck |
+| 3.4 | **[[setup:immich|Immich — Photo Management]]** | Photo server, ML container, Redis, Postgres, mobile app |
+| 3.5 | **[[setup:stirling|Stirling PDF — PDF Tools]]** | Merge, split, compress, OCR — all processed locally |
+| 3.6 | **[[setup:wiki|DokuWiki — This Wiki]]** | How this wiki was built, markup reference, export to PDF |
+
+----
+
+===== 1. Problem Statement & Service Rationale =====
+
+→ **[[problem|Open page]]**
+
+  * [[problem#the_problem|The Problem]]
+  * [[problem#why_these_services|Why These Services?]]
+  * [[problem#traefik_reverse_proxy|Traefik — Reverse Proxy]]
+  * [[problem#dnsmasq_dns_resolver|dnsmasq — DNS Resolver]]
+  * [[problem#gitea_self-hosted_git|Gitea — Self-Hosted Git]]
+  * [[problem#immich_photo_management|Immich — Photo Management]]
+  * [[problem#stirling_pdf_pdf_tools|Stirling PDF — PDF Tools]]
+  * [[problem#dokuwiki_documentation|DokuWiki — Documentation]]
+  * [[problem#references|References]]
+
+----
+
+===== 2. Architecture & Network Topology =====
+
+→ **[[architecture|Open page]]**
+
+  * [[architecture#overview|Overview]]
+  * [[architecture#ascii_architecture_diagram|ASCII Diagram]]
+  * [[architecture#network_topology|Network Topology]]
+  * [[architecture#container_summary|Container Summary]]
+  * [[architecture#dns_resolution_flow|DNS Resolution Flow]]
+  * [[architecture#startup_order|Startup Order]]
+
+----
+
+===== 3. Setup Guides =====
+
+==== 3.1 Prerequisites ====
+
+→ **[[setup:prerequisites|Open page]]**
+
+  * [[setup:prerequisites#virtualbox_vm|VirtualBox VM Setup]]
+  * [[setup:prerequisites#install_docker|Install Docker]]
+  * [[setup:prerequisites#clone_the_project_repository|Clone the Repository]]
+  * [[setup:prerequisites#create_the_shared_docker_network|Create Proxy Network]]
+  * [[setup:prerequisites#configure_dns_on_the_host_machine|Configure DNS on Host]]
+  * [[setup:prerequisites#prepare_env_files|Prepare .env Files]]
+  * [[setup:prerequisites#summary_checklist|Summary Checklist]]
+
+==== 3.2 Traefik & dnsmasq ====
+
+→ **[[setup:traefik|Open page]]**
+
+  * [[setup:traefik#configuration_files|Configuration Files]]
+  * [[setup:traefik#step-by-step_deployment|Step-by-Step Deployment]]
+  * [[setup:traefik#how_routing_works|How Routing Works]]
+  * [[setup:traefik#troubleshooting|Troubleshooting]]
+
+==== 3.3 Gitea — Self-Hosted Git ====
+
+→ **[[setup:gitea|Open page]]**
+
+  * [[setup:gitea#step-by-step_deployment|Step-by-Step Deployment]]
+  * [[setup:gitea#healthcheck_details|Healthcheck Details]]
+  * [[setup:gitea#troubleshooting|Troubleshooting]]
+
+==== 3.4 Immich — Photo Management ====
+
+→ **[[setup:immich|Open page]]**
+
+  * [[setup:immich#container_architecture|Container Architecture]]
+  * [[setup:immich#step-by-step_deployment|Step-by-Step Deployment]]
+  * [[setup:immich#database_note|Database Note (pgvecto.rs)]]
+  * [[setup:immich#troubleshooting|Troubleshooting]]
+
+==== 3.5 Stirling PDF — PDF Tools ====
+
+→ **[[setup:stirling|Open page]]**
+
+  * [[setup:stirling#step-by-step_deployment|Step-by-Step Deployment]]
+  * [[setup:stirling#common_operations_walkthrough|Common Operations Walkthrough]]
+  * [[setup:stirling#troubleshooting|Troubleshooting]]
+
+==== 3.6 DokuWiki — This Wiki ====
+
+→ **[[setup:wiki|Open page]]**
+
+  * [[setup:wiki#step-by-step_deployment|Step-by-Step Deployment]]
+  * [[setup:wiki#dokuwiki_markup_reference|Markup Reference]]
+  * [[setup:wiki#exporting_the_wiki_to_pdf|Exporting to PDF]]
+
+----
+
+===== Quick Reference =====
+
+^ Service        ^ URL                          ^ Version       ^
+| Traefik        | [[http://traefik.local]]     | v2.11         |
+| Gitea          | [[http://gitea.local]]       | 1.22.3        |
+| Immich         | [[http://immich.local]]      | v1.117.0      |
+| Stirling PDF   | [[http://stirling.local]]    | 0.38.1        |
+| DokuWiki       | [[http://wiki.local]]        | 2024-02-06a   |

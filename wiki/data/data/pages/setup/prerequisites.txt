@@ -1,0 +1,199 @@
+====== Prerequisites ======
+
+This page covers everything that must be in place before starting any service.
+
+----
+
+===== 1. VirtualBox VM =====
+
+==== Create the VM ====
+
+  - Download and install [[https://www.virtualbox.org/wiki/Downloads|VirtualBox 7.x]].
+  - Download the [[https://ubuntu.com/download/server|Ubuntu Server 22.04 LTS]] ISO.
+  - In VirtualBox → **New**:
+    - Name: ''home-lab''
+    - Type: Linux / Ubuntu (64-bit)
+    - RAM: **4 GB minimum** (8 GB recommended for Immich ML)
+    - Disk: **40 GB** dynamically allocated
+
+==== Configure Network Adapters ====
+
+The VM needs two adapters:
+
+^ Adapter ^ Type          ^ Purpose                            ^
+| 1       | NAT           | Internet access for package installs |
+| 2       | Host-Only     | Fixed IP for service access from host |
+
+To add the host-only adapter:
+  - VM Settings → **Network** → Adapter 2 → Enable → **Host-only Adapter**
+  - Select ''vboxnet0'' (create it in VirtualBox → File → Host Network Manager if it does not exist).
+  - Set the adapter's IPv4 to ''192.168.56.1/24'' in Host Network Manager.
+
+==== Assign a Static IP Inside the VM ====
+
+After Ubuntu is installed, edit the Netplan config:
+
+<code>
+sudo nano /etc/netplan/00-installer-config.yaml
+</code>
+
+Replace the contents with:
+
+<code>
+network:
+  version: 2
+  ethernets:
+    enp0s3:           # NAT adapter — name may differ
+      dhcp4: true
+    enp0s8:           # Host-only adapter — name may differ
+      dhcp4: no
+      addresses:
+        - 192.168.56.3/24
+</code>
+
+Apply:
+
+<code>
+sudo netplan apply
+</code>
+
+Verify:
+
+<code>
+ip addr show enp0s8
+# Should show 192.168.56.3/24
+</code>
+
+----
+
+===== 2. Install Docker =====
+
+<code>
+# Remove any old Docker packages
+sudo apt-get remove -y docker docker-engine docker.io containerd runc
+
+# Install prerequisites
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+
+# Add Docker's GPG key and repository
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker Engine and Compose plugin
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Allow your user to run Docker without sudo
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Verify
+docker version
+docker compose version
+</code>
+
+----
+
+===== 3. Clone the Project Repository =====
+
+<code>
+git clone <your-repo-url> ~/final
+cd ~/final
+</code>
+
+The repository layout is:
+
+<code>
+final/
+├── traefik/
+├── gitea/
+├── immich/
+├── stirling-pdf/
+└── wiki/
+</code>
+
+----
+
+===== 4. Create the Shared Docker Network =====
+
+Traefik requires a Docker network named ''proxy'' to exist before any stack is started.
+
+<code>
+docker network create proxy
+</code>
+
+This only needs to be done once.  Docker Compose stacks reference it as an external network.
+
+----
+
+===== 5. Configure DNS on the Host Machine =====
+
+The host browser must send ''*.local'' DNS queries to dnsmasq on the VM.
+
+==== Linux (systemd-resolved) ====
+
+<code>
+sudo resolvectl dns vboxnet0 192.168.56.3
+sudo resolvectl domain vboxnet0 ~local
+</code>
+
+To make this permanent, create ''/etc/systemd/resolved.conf.d/homelab.conf'':
+
+<code>
+[Resolve]
+DNS=192.168.56.3
+Domains=~local
+</code>
+
+<code>
+sudo systemctl restart systemd-resolved
+</code>
+
+==== Windows ====
+
+  - Open **Network and Sharing Centre** → change adapter settings.
+  - Right-click the VirtualBox Host-Only adapter → **Properties** → **IPv4** → **Properties**.
+  - Set **Preferred DNS server** to ''192.168.56.3''.
+
+==== macOS ====
+
+Create ''/etc/resolver/local'':
+
+<code>
+sudo mkdir -p /etc/resolver
+echo "nameserver 192.168.56.3" | sudo tee /etc/resolver/local
+</code>
+
+----
+
+===== 6. Prepare .env Files =====
+
+Each service that requires secrets has a ''.env.example'' committed to the repository.  Copy it and fill in values before starting that service.
+
+<code>
+cp traefik/.env.example traefik/.env
+cp gitea/.env.example   gitea/.env
+cp immich/.env.example  immich/.env
+</code>
+
+See the individual service setup pages for the specific values required in each file.
+
+----
+
+===== Summary Checklist =====
+
+  - [x] VirtualBox VM created with NAT + host-only adapters
+  - [x] Ubuntu Server installed; static IP ''192.168.56.3'' assigned on host-only adapter
+  - [x] Docker Engine + Compose plugin installed
+  - [x] Project repository cloned
+  - [x] ''proxy'' Docker network created
+  - [x] Host DNS configured to forward ''*.local'' to ''192.168.56.3''
+  - [x] ''.env'' files copied and populated
+
+Next: [[setup:traefik|Deploy Traefik & dnsmasq]]

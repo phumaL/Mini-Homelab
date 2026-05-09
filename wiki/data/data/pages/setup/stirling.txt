@@ -1,0 +1,140 @@
+====== Stirling PDF — PDF Tools ======
+
+**Prerequisite:** [[setup:traefik|Traefik & dnsmasq]] running.
+
+----
+
+===== What Stirling PDF Provides =====
+
+Stirling PDF is a self-hosted web application for PDF manipulation.  It runs entirely on the local server — no files are sent to the internet.  Available operations include:
+
+  * Merge and split PDFs
+  * Compress PDFs
+  * Convert PDFs to/from Word, images, HTML
+  * Rotate, reorder, and crop pages
+  * OCR (text recognition) via Tesseract
+  * Add/remove passwords and watermarks
+
+This is particularly useful for sensitive documents (ID copies, payslips, contracts) that should not be uploaded to third-party web tools.
+
+----
+
+===== File Overview =====
+
+<code>
+stirling-pdf/
+├── docker-compose.yml
+├── configs/              # Runtime configuration (created at startup)
+└── logs/                 # Application logs (created at startup)
+</code>
+
+No ''.env'' file is required — all configuration is done via environment variables in ''docker-compose.yml''.
+
+----
+
+===== docker-compose.yml Explained =====
+
+<code>
+services:
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:0.38.1
+    restart: unless-stopped
+    volumes:
+      - ./configs:/configs
+      - ./logs:/logs
+    environment:
+      # Security features disabled; acceptable on a trusted LAN
+      # — do not expose to the internet.
+      - DOCKER_ENABLE_SECURITY=false
+      - LANGS=en_GB
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.stirling.rule=Host(`stirling.local`)"
+      - "traefik.http.routers.stirling.entrypoints=web"
+      - "traefik.http.services.stirling.loadbalancer.server.port=8080"
+</code>
+
+**''DOCKER_ENABLE_SECURITY=false''**
+
+Stirling PDF ships with an optional login system that restricts access to the application.  This is disabled here because:
+  * The service is only reachable on the local network (''192.168.56.x'').
+  * There is no port forwarding or internet exposure.
+  * Adding a login adds friction without providing meaningful security in this context.
+
+If this server were ever exposed to the internet, ''DOCKER_ENABLE_SECURITY'' should be set to ''true'' and user accounts configured.
+
+**''LANGS=en_GB''** sets the OCR language pack.  Add additional language codes (comma-separated) to support other languages.
+
+----
+
+===== Step-by-Step Deployment =====
+
+==== Step 1: Start the container ====
+
+No ''.env'' setup is needed.  Start directly:
+
+<code>
+docker compose -f stirling-pdf/docker-compose.yml up -d
+</code>
+
+==== Step 2: Verify ====
+
+<code>
+docker compose -f stirling-pdf/docker-compose.yml ps
+# Should show: stirling-pdf   Up
+</code>
+
+<code>
+docker logs stirling-pdf --tail 20
+# Should show Stirling PDF startup messages with no errors
+</code>
+
+==== Step 3: Use the application ====
+
+  - Open ''http:%%//%%stirling.local'' in a browser.
+  - The home page shows all available PDF operations as tiles.
+  - Select an operation, upload a PDF, and click the action button.
+  - The processed file downloads directly to the browser.
+
+No account or login is required.
+
+----
+
+===== Common Operations Walkthrough =====
+
+==== Merge PDFs ====
+
+  - Click **Merge PDFs**.
+  - Drag and drop multiple PDF files.
+  - Reorder them by dragging if needed.
+  - Click **Merge PDFs**.  The merged file downloads.
+
+==== Compress a PDF ====
+
+  - Click **Compress PDF**.
+  - Upload the file.
+  - Choose a compression level.
+  - Click **Compress PDF**.
+
+==== OCR (Extract text from scanned PDF) ====
+
+  - Click **PDF OCR**.
+  - Upload a scanned PDF.
+  - Select language: ''English (GB)''.
+  - Click **Apply OCR**.  A searchable PDF downloads.
+
+----
+
+===== Troubleshooting =====
+
+^ Symptom                         ^ Likely Cause                        ^ Fix                                       ^
+| ''http:%%//%%stirling.local'' not loading | Traefik not running or container down | ''docker ps'', start traefik first   |
+| OCR returns empty text           | Wrong language pack selected        | Confirm ''LANGS=en_GB'' in compose file   |
+| File conversion fails            | File may be corrupted or unsupported | Try a different input file              |
+| Large PDF times out              | Default nginx/proxy timeout          | Use a smaller file or increase Traefik timeout |
+
+----
+
+Next: [[setup:wiki|Deploy DokuWiki]]

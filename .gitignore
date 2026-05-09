@@ -11,10 +11,8 @@ immich/db/
 immich/photos/
 stirling-pdf/configs/
 stirling-pdf/logs/
-wiki/data/
 
 # Generic dirs
-data/
 logs/
 config/
 configs/
@@ -22,3 +20,12 @@ db/
 
 # Traefik runtime files
 traefik/logs/
+
+# Wiki: ignore all runtime data but track pages
+# Each level must be explicitly un-ignored before its contents can be re-ignored
+data/
+!wiki/data/
+wiki/data/*
+!wiki/data/data/
+wiki/data/data/*
+!wiki/data/data/pages/

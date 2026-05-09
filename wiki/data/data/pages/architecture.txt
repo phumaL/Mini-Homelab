@@ -1,0 +1,72 @@
+====== Architecture & Network Topology ======
+
+===== Overview =====
+
+All services run as Docker containers inside a single VirtualBox Ubuntu VM.  The host machine reaches the VM via a host-only network adapter.  dnsmasq resolves all ''*.local'' DNS queries to the VM's IP, and Traefik routes each hostname to the correct container.
+
+----
+
+===== Architecture Diagram =====
+
+{{:architecture.png|Infrastructure diagram}}
+
+----
+
+===== Network Topology =====
+
+Docker uses two named networks to enforce isolation:
+
+^ Network    ^ Type         ^ Purpose                                                   ^
+| ''proxy''  | External     | Traefik-visible; all app containers join this network      |
+| ''internal''| Internal    | Database/cache isolation; no external routing              |
+
+**Key rules:**
+  * ''exposedByDefault: false'' in ''traefik.yml'' — only containers with ''traefik.enable=true'' labels are routed.
+  * Database and cache containers (''gitea-db'', ''immich-db'', ''immich-redis'') only join ''internal'' — they are never reachable from Traefik or the host.
+  * The Docker socket is mounted **read-only** into Traefik, limiting its access to the daemon.
+
+----
+
+===== Container Summary =====
+
+^ Container               ^ Image                                          ^ Network(s)          ^ Exposed Port     ^
+| ''traefik''             | ''traefik:v2.11''                              | proxy               | 80 (host)        |
+| ''dnsmasq''             | ''4km3/dnsmasq:2.90''                          | host                | 53/udp, 53/tcp   |
+| ''gitea''               | ''gitea/gitea:1.22.3''                         | proxy, internal     | 2222/SSH (host)  |
+| ''gitea-db''            | ''postgres:16-alpine''                         | internal            | —                |
+| ''immich-server''       | ''ghcr.io/immich-app/immich-server:v1.117.0''  | proxy, internal     | —                |
+| ''immich-machine-learning'' | ''ghcr.io/immich-app/immich-machine-learning:v1.117.0'' | internal | —           |
+| ''immich-redis''        | ''redis:6.2-alpine''                           | internal            | —                |
+| ''immich-db''           | ''ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0'' | internal | —  |
+| ''stirling-pdf''        | ''stirlingtools/stirling-pdf:0.38.1''          | proxy               | —                |
+| ''wiki''                | ''dokuwiki/dokuwiki:2024-02-06a''              | proxy               | —                |
+
+----
+
+===== DNS Resolution Flow =====
+
+<code>
+Host browser requests: http://gitea.local
+
+1. Host DNS query → 192.168.56.3:53 (dnsmasq)
+2. dnsmasq wildcard: *.local → 192.168.56.3
+3. Browser connects to 192.168.56.3:80
+4. Traefik matches Host(`gitea.local`) label on gitea container
+5. Traefik forwards request to gitea:3000 via proxy network
+</code>
+
+The host machine must be configured to use ''192.168.56.3'' as its DNS server (or at least for ''.local'' queries) for this flow to work.  See [[setup:prerequisites|Prerequisites]] for DNS configuration instructions.
+
+----
+
+===== Startup Order =====
+
+Services must be started in this order to satisfy healthcheck dependencies:
+
+  - ''traefik/'' stack (Traefik + dnsmasq) — creates the ''proxy'' network
+  - ''gitea/'' stack — ''gitea-db'' must be healthy before ''gitea'' starts
+  - ''immich/'' stack — ''immich-db'' and ''immich-redis'' must be healthy before ''immich-server'' starts
+  - ''stirling-pdf/'' stack — no dependencies
+  - ''wiki/'' stack — no dependencies
+
+Docker Compose ''depends_on: condition: service_healthy'' enforces the intra-stack ordering automatically.

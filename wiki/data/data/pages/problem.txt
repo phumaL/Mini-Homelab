@@ -1,0 +1,81 @@
+====== Problem Statement & Service Rationale ======
+
+===== The Problem =====
+
+Modern personal computing generates a growing set of needs that commercial cloud services address — but at the cost of privacy, ongoing subscription fees, and dependence on third-party availability.  Specifically:
+
+  - **Source code** lives on GitHub/GitLab, which may throttle private repos or go offline.
+  - **Photos** are uploaded to Google Photos or iCloud, giving corporations access to personal media.
+  - **Documents** require uploading sensitive files to web-based PDF tools with unknown data retention policies.
+  - **Service discovery** on a LAN typically requires remembering IP addresses and port numbers.
+  - **Documentation** about personal infrastructure has no durable home.
+
+This project solves all five problems with a single, self-contained home server that runs entirely on a local network, requires no cloud accounts, and costs nothing beyond the electricity to run a VM.
+
+----
+
+===== Why These Services? =====
+
+==== Traefik — Reverse Proxy ====
+
+Without a reverse proxy, every service needs its own port (e.g. '':3000'', '':8080'', '':2283'').  Users must memorise port numbers and there is no centralised access control.
+
+Traefik was chosen because:
+  * It integrates natively with Docker via label-based configuration — no separate config file per service.
+  * It supports automatic routing of ''*.local'' domains when combined with dnsmasq.
+  * Its dashboard provides real-time visibility into all active routes.
+  * HTTP Basic Auth middleware secures the dashboard with a single label.
+  * It is the industry-standard choice for Docker-based home labs.
+
+Alternative considered: **Nginx Proxy Manager** — rejected because it requires a separate database and a GUI to configure, adding complexity.
+
+==== dnsmasq — DNS Resolver ====
+
+For ''*.local'' domains to resolve, the host's DNS must map them to the VM's IP.  dnsmasq provides a lightweight DNS server that handles this with a single wildcard rule (''address=/.local/192.168.56.3'').  It runs as a container alongside Traefik, keeping DNS management self-contained.
+
+==== Gitea — Self-Hosted Git ====
+
+Gitea provides the full GitHub experience (repositories, issues, pull requests, web editor, SSH push) without sending code to a third party.  It was chosen over alternatives because:
+  * It is a single Go binary compiled into a small container image — lightweight.
+  * It supports Postgres as a backend, which is a production-grade database.
+  * SSH-based push/pull works on a custom port (2222) without conflicting with the host.
+  * It is actively maintained and widely used in home-lab communities.
+
+Alternative considered: **Gogs** — Gitea is a more active fork with better feature parity to GitHub.
+
+==== Immich — Photo Management ====
+
+Immich replicates the Google Photos experience: automatic mobile backup, facial recognition, album organisation, and a timeline view — all on-premises.  It was chosen because:
+  * It is the most actively developed self-hosted photo solution as of 2024.
+  * It ships a machine-learning container for face/object recognition out of the box.
+  * Its mobile app (iOS/Android) supports background automatic backup over Wi-Fi.
+
+Alternative considered: **Nextcloud** — Nextcloud is a broader platform (files, calendar, etc.) which adds unnecessary complexity when photos are the only requirement.
+
+==== Stirling PDF — PDF Tools ====
+
+Stirling PDF is a self-hosted web application covering the most common PDF operations: merge, split, compress, rotate, convert, and OCR.  Uploading sensitive documents (payslips, ID documents, contracts) to online PDF tools poses a privacy risk.  Stirling PDF eliminates this by processing files locally.
+
+It was chosen because:
+  * It covers a wide range of operations in a single container.
+  * It requires no database or persistent state — stateless and simple.
+  * Security features are disabled (''DOCKER_ENABLE_SECURITY=false'') since the service is LAN-only and user authentication would add friction with no security benefit in a trusted network.
+
+==== DokuWiki — Documentation ====
+
+DokuWiki stores pages as plain-text files — no database required.  It was chosen to document this project because:
+  * Zero-database design makes backup trivial: copy the ''data/pages/'' directory.
+  * Pages are written in a lightweight markup language similar to Markdown.
+  * It runs well in a minimal container.
+  * The wiki itself demonstrates the stack: it is served through Traefik at ''wiki.local''.
+
+----
+
+===== References =====
+
+  * [[https://traefik.io/traefik/|Traefik Documentation]]
+  * [[https://thekelleys.org.uk/dnsmasq/doc.html|dnsmasq Documentation]]
+  * [[https://gitea.io|Gitea Official Site]]
+  * [[https://immich.app|Immich Official Site]]
+  * [[https://www.stirlingpdf.com|Stirling PDF Official Site]]
+  * [[https://www.dokuwiki.org|DokuWiki Official Site]]

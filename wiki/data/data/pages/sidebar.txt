@@ -1,0 +1,35 @@
+**[[start|Home Lab Server]]**
+
+----
+
+**[[problem|Problem Statement]]**
+
+**[[architecture|Architecture]]**
+
+----
+
+**Setup Guides**
+
+[[setup:prerequisites|Prerequisites]]
+
+[[setup:traefik|Traefik & dnsmasq]]
+
+[[setup:gitea|Gitea]]
+
+[[setup:immich|Immich]]
+
+[[setup:stirling|Stirling PDF]]
+
+[[setup:wiki|DokuWiki]]
+
+----
+
+**Quick Links**
+
+[[http://traefik.local|traefik.local]]
+
+[[http://gitea.local|gitea.local]]
+
+[[http://immich.local|immich.local]]
+
+[[http://stirling.local|stirling.local]]

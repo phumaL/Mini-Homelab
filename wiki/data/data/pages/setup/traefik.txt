@@ -1,0 +1,179 @@
+====== Traefik Reverse Proxy & dnsmasq DNS ======
+
+**Prerequisite:** [[setup:prerequisites|Prerequisites]] completed.
+
+----
+
+===== What This Stack Does =====
+
+  * **dnsmasq** answers DNS queries for ''*.local'' from the host, returning ''192.168.56.3'' for every hostname.
+  * **Traefik** listens on port 80, reads Docker container labels, and routes HTTP requests to the right container by ''Host'' header.
+  * Together they allow any service to be reached by a human-friendly URL (e.g. ''http:%%//%%gitea.local'') without port numbers.
+
+----
+
+===== File Overview =====
+
+<code>
+traefik/
+├── docker-compose.yml   # Traefik + dnsmasq containers
+├── traefik.yml          # Static Traefik configuration
+├── dnsmasq.conf         # dnsmasq wildcard DNS rule
+├── .env.example         # Template — copy to .env and fill in
+└── logs/                # Created automatically at runtime
+</code>
+
+----
+
+===== Configuration Files =====
+
+==== traefik.yml ====
+
+<code>
+api:
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: proxy
+
+log:
+  filePath: /var/log/traefik/traefik.log
+  level: INFO
+
+accessLog:
+  filePath: /var/log/traefik/access.log
+</code>
+
+Key settings:
+  * ''exposedByDefault: false'' — containers are ignored by Traefik unless they have ''traefik.enable=true''.
+  * ''network: proxy'' — Traefik only communicates with containers on the ''proxy'' network.
+  * Access logs are written to file, useful for auditing requests.
+
+==== dnsmasq.conf ====
+
+<code>
+# Resolve all *.local to the VM's host-only IP.
+address=/.local/192.168.56.3
+
+# Don't forward unqualified names (no dots) upstream
+domain-needed
+
+# Don't forward reverse lookups for private ranges upstream
+bogus-priv
+
+# Upstream DNS for everything else
+server=1.1.1.1
+server=8.8.8.8
+</code>
+
+The single ''address='' line is the wildcard rule.  All other DNS queries (e.g. ''google.com'') are forwarded to Cloudflare (1.1.1.1) and Google (8.8.8.8).
+
+----
+
+===== Step-by-Step Deployment =====
+
+==== Step 1: Prepare .env ====
+
+<code>
+cp traefik/.env.example traefik/.env
+nano traefik/.env
+</code>
+
+Set the two required variables:
+
+<code>
+# VM's host-only IP — must match the static IP assigned to enp0s8
+HOST_IP=192.168.56.3
+
+# HTTP Basic Auth credentials for the Traefik dashboard.
+# Generate with: echo $(htpasswd -nB admin) | sed -e s/\\$/\\$\\$/g
+# Example below uses admin:admin — change for any deployment beyond local testing.
+TRAEFIK_USERS=admin:$$2y$$05$$examplehashedpasswordhere
+</code>
+
+To generate a real bcrypt password hash:
+
+<code>
+# Install apache2-utils if not present
+sudo apt-get install -y apache2-utils
+
+# Generate hash (replace 'admin' and 'yourpassword')
+echo $(htpasswd -nB admin) | sed -e 's/\$/\$\$/g'
+</code>
+
+Copy the output (the full ''admin:$$2y$$...'' string) as the value of ''TRAEFIK_USERS''.
+
+==== Step 2: Create the proxy network (once only) ====
+
+<code>
+docker network create proxy
+</code>
+
+Skip if already created.
+
+==== Step 3: Start the stack ====
+
+<code>
+docker compose -f traefik/docker-compose.yml up -d
+</code>
+
+==== Step 4: Verify ====
+
+<code>
+# Both containers should show "Up"
+docker compose -f traefik/docker-compose.yml ps
+
+# Traefik log should show no errors
+docker logs traefik --tail 20
+
+# dnsmasq should be listening on UDP 53
+ss -ulnp | grep 53
+</code>
+
+==== Step 5: Test DNS from the host ====
+
+<code>
+# From the HOST machine (not the VM):
+nslookup traefik.local 192.168.56.3
+# Expected: Address: 192.168.56.3
+</code>
+
+==== Step 6: Test the dashboard ====
+
+Open ''http:%%//%%traefik.local'' in a browser on the host.  A Basic Auth prompt should appear.  Enter the credentials used when generating ''TRAEFIK_USERS''.  The Traefik dashboard should load.
+
+----
+
+===== How Routing Works =====
+
+Each service's ''docker-compose.yml'' adds labels to its container:
+
+<code>
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.gitea.rule=Host(`gitea.local`)"
+  - "traefik.http.routers.gitea.entrypoints=web"
+  - "traefik.http.services.gitea.loadbalancer.server.port=3000"
+</code>
+
+When Gitea's container starts, Traefik detects these labels via the Docker socket and automatically creates a route: HTTP requests with ''Host: gitea.local'' are forwarded to ''gitea:3000'' on the ''proxy'' network — no restart or config reload needed.
+
+----
+
+===== Troubleshooting =====
+
+^ Symptom                         ^ Likely Cause                          ^ Fix                                    ^
+| Browser shows "connection refused" | Traefik not running                | ''docker compose ... up -d''           |
+| DNS does not resolve ''*.local''  | Host DNS not pointing to VM          | [[setup:prerequisites#5|DNS setup]]    |
+| Dashboard shows 401 Unauthorized  | Wrong password in ''TRAEFIK_USERS''  | Regenerate hash, restart traefik       |
+| Container not appearing in dashboard | Missing ''traefik.enable=true'' label | Add label, recreate container       |
+
+----
+
+Next: [[setup:gitea|Deploy Gitea]]
