@@ -16,11 +16,11 @@
 
 [[setup:gitea|Gitea]]
 
-[[setup:immich|Immich]]
-
 [[setup:stirling|Stirling PDF]]
 
 [[setup:wiki|DokuWiki]]
+
+[[setup:portainer|Portainer]]
 
 ----
 
@@ -33,3 +33,5 @@
 [[http://immich.local|immich.local]]
 
 [[http://stirling.local|stirling.local]]
+
+[[http://pt.local|pt.local]]

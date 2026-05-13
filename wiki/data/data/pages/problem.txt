@@ -5,12 +5,12 @@
 Modern personal computing generates a growing set of needs that commercial cloud services address — but at the cost of privacy, ongoing subscription fees, and dependence on third-party availability.  Specifically:
 
   - **Source code** lives on GitHub/GitLab, which may throttle private repos or go offline.
-  - **Photos** are uploaded to Google Photos or iCloud, giving corporations access to personal media.
   - **Documents** require uploading sensitive files to web-based PDF tools with unknown data retention policies.
   - **Service discovery** on a LAN typically requires remembering IP addresses and port numbers.
+  - **Container management** across multiple Compose stacks requires SSH access and CLI knowledge.
   - **Documentation** about personal infrastructure has no durable home.
 
-This project solves all five problems with a single, self-contained home server that runs entirely on a local network, requires no cloud accounts, and costs nothing beyond the electricity to run a VM.
+This project solves all four problems with a single, self-contained home server that runs entirely on a local network, requires no cloud accounts, and costs nothing beyond the electricity to run a VM.
 
 ----
 
@@ -43,15 +43,6 @@ Gitea provides the full GitHub experience (repositories, issues, pull requests, 
 
 Alternative considered: **Gogs** — Gitea is a more active fork with better feature parity to GitHub.
 
-==== Immich — Photo Management ====
-
-Immich replicates the Google Photos experience: automatic mobile backup, facial recognition, album organisation, and a timeline view — all on-premises.  It was chosen because:
-  * It is the most actively developed self-hosted photo solution as of 2024.
-  * It ships a machine-learning container for face/object recognition out of the box.
-  * Its mobile app (iOS/Android) supports background automatic backup over Wi-Fi.
-
-Alternative considered: **Nextcloud** — Nextcloud is a broader platform (files, calendar, etc.) which adds unnecessary complexity when photos are the only requirement.
-
 ==== Stirling PDF — PDF Tools ====
 
 Stirling PDF is a self-hosted web application covering the most common PDF operations: merge, split, compress, rotate, convert, and OCR.  Uploading sensitive documents (payslips, ID documents, contracts) to online PDF tools poses a privacy risk.  Stirling PDF eliminates this by processing files locally.
@@ -69,6 +60,18 @@ DokuWiki stores pages as plain-text files — no database required.  It was chos
   * It runs well in a minimal container.
   * The wiki itself demonstrates the stack: it is served through Traefik at ''wiki.local''.
 
+==== Portainer — Container Management ====
+
+Managing multiple Docker Compose stacks from the command line requires SSH access and knowledge of Docker CLI commands.  Portainer provides a browser-based dashboard that gives full visibility into all running containers, images, volumes, and networks.
+
+It was chosen because:
+  * It requires no additional database — state is stored in a single file.
+  * The Docker socket is mounted read-only, limiting its footprint.
+  * It surfaces container logs, resource usage, and restart controls in one place.
+  * It is the most widely adopted open-source Docker management UI.
+
+Alternative considered: **Yacht** — lighter, but less feature-complete than Portainer CE.
+
 ----
 
 ===== References =====
@@ -79,3 +82,4 @@ DokuWiki stores pages as plain-text files — no database required.  It was chos
   * [[https://immich.app|Immich Official Site]]
   * [[https://www.stirlingpdf.com|Stirling PDF Official Site]]
   * [[https://www.dokuwiki.org|DokuWiki Official Site]]
+  * [[https://www.portainer.io|Portainer Official Site]]

@@ -7,10 +7,9 @@
 # Service data volumes
 gitea/data/
 gitea/db/
-immich/db/
-immich/photos/
 stirling-pdf/configs/
 stirling-pdf/logs/
+portainer/data/
 
 # Generic dirs
 logs/

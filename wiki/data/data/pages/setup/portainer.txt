@@ -1,0 +1,126 @@
+====== Portainer — Container Management ======
+
+**Prerequisite:** [[setup:traefik|Traefik & dnsmasq]] running.
+
+----
+
+===== What Portainer Provides =====
+
+Portainer CE is a web-based management UI for Docker. It gives a visual overview of every container, image, volume, and network on the host — without needing SSH or Docker CLI knowledge.
+
+Key features used in this stack:
+  * View running/stopped status of all containers across all Compose stacks
+  * Access container logs and a live console from the browser
+  * Restart, stop, or recreate containers with one click
+  * Browse Docker networks, volumes, and images
+  * Inspect environment variables and container resource usage
+
+Available at ''http:%%//%%pt.local'' once deployed.
+
+----
+
+===== File Overview =====
+
+<code>
+portainer/
+├── docker-compose.yml
+└── data/               # Portainer state (DB, keys) — created at startup
+</code>
+
+No ''.env'' file is required.
+
+----
+
+===== docker-compose.yml Explained =====
+
+<code>
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data:/data
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`pt.local`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+</code>
+
+**Design decisions:**
+  * The Docker socket is mounted **read-only** (''ro'') — Portainer can read container state but cannot modify the daemon configuration.
+  * ''./data:/data'' persists the Portainer database and credentials across container restarts.
+  * Portainer only joins the ''proxy'' network — it needs no ''internal'' network since it has no database container.
+
+----
+
+===== Step-by-Step Deployment =====
+
+==== Step 1: Start the container ====
+
+<code>
+docker compose -f portainer/docker-compose.yml up -d
+</code>
+
+==== Step 2: Verify ====
+
+<code>
+docker compose -f portainer/docker-compose.yml ps
+</code>
+
+The container should show ''Up''.
+
+==== Step 3: Create the admin account ====
+
+  - Open ''http:%%//%%pt.local'' in a browser.
+  - The first-run page asks for a username and password — this is the Portainer admin account.
+  - Set a strong password (minimum 12 characters as required by Portainer).
+  - Click **Create user**.
+
+==== Step 4: Connect to the local Docker environment ====
+
+  - On the home screen, click **Get Started** under the **local** environment.
+  - Portainer auto-detects the Docker socket and connects immediately.
+  - The dashboard shows all containers, stacks, images, volumes, and networks.
+
+----
+
+===== Using Portainer =====
+
+==== View all containers ====
+
+Home → local → **Containers** — shows every container with its status, image, and uptime.
+
+==== Read container logs ====
+
+Containers → click a container name → **Logs** tab — live-streaming log output with search and timestamps.
+
+==== Open a container console ====
+
+Containers → click a container → **Console** tab → **Connect** — opens an interactive shell inside the container.
+
+==== Restart a container ====
+
+Containers → tick the checkbox → **Restart** button at the top.
+
+==== Inspect a Compose stack ====
+
+Home → local → **Stacks** — lists each ''docker compose'' project. Click a stack to see its containers and environment variables.
+
+----
+
+===== Troubleshooting =====
+
+^ Symptom ^ Likely Cause ^ Fix ^
+| ''http:%%//%%pt.local'' not loading | Traefik not running | Start traefik stack first |
+| First-run page never appears | Container not running | ''docker logs portainer'' |
+| "Password too short" on first run | Portainer requires 12+ characters | Use a longer password |
+| Cannot see other containers | Docker socket not mounted | Confirm ''/var/run/docker.sock'' volume in compose file |
+
+----
+
+Next: [[start|Back to Home]]

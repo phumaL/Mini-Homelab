@@ -8,7 +8,7 @@ All services run as Docker containers inside a single VirtualBox Ubuntu VM.  The
 
 ===== Architecture Diagram =====
 
-{{:architecture.png|Infrastructure diagram}}
+{{:architecture.svg|Infrastructure diagram}}
 
 ----
 
@@ -34,12 +34,9 @@ Docker uses two named networks to enforce isolation:
 | ''dnsmasq''             | ''4km3/dnsmasq:2.90''                          | host                | 53/udp, 53/tcp   |
 | ''gitea''               | ''gitea/gitea:1.22.3''                         | proxy, internal     | 2222/SSH (host)  |
 | ''gitea-db''            | ''postgres:16-alpine''                         | internal            | —                |
-| ''immich-server''       | ''ghcr.io/immich-app/immich-server:v1.117.0''  | proxy, internal     | —                |
-| ''immich-machine-learning'' | ''ghcr.io/immich-app/immich-machine-learning:v1.117.0'' | internal | —           |
-| ''immich-redis''        | ''redis:6.2-alpine''                           | internal            | —                |
-| ''immich-db''           | ''ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0'' | internal | —  |
 | ''stirling-pdf''        | ''stirlingtools/stirling-pdf:0.38.1''          | proxy               | —                |
 | ''wiki''                | ''dokuwiki/dokuwiki:2024-02-06a''              | proxy               | —                |
+| ''portainer''           | ''portainer/portainer-ce:latest''              | proxy               | —                |
 
 ----
 
@@ -65,8 +62,8 @@ Services must be started in this order to satisfy healthcheck dependencies:
 
   - ''traefik/'' stack (Traefik + dnsmasq) — creates the ''proxy'' network
   - ''gitea/'' stack — ''gitea-db'' must be healthy before ''gitea'' starts
-  - ''immich/'' stack — ''immich-db'' and ''immich-redis'' must be healthy before ''immich-server'' starts
   - ''stirling-pdf/'' stack — no dependencies
   - ''wiki/'' stack — no dependencies
+  - ''portainer/'' stack — no dependencies
 
 Docker Compose ''depends_on: condition: service_healthy'' enforces the intra-stack ordering automatically.

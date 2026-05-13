@@ -1,7 +1,7 @@
 ====== Home Lab Server — Project Wiki ======
 
 Self-hosted home server stack | Final Milestone PMF W13 | IT28X97 @ UJ\\
-Docker · Traefik · dnsmasq · Gitea · Immich · Stirling PDF · DokuWiki
+Docker · Traefik · dnsmasq · Gitea · Stirling PDF · DokuWiki · Portainer
 
 ----
 
@@ -13,9 +13,9 @@ Docker · Traefik · dnsmasq · Gitea · Immich · Stirling PDF · DokuWiki
 | 3.1 | **[[setup:prerequisites|Prerequisites]]** | VirtualBox, Ubuntu, Docker install, proxy network, host DNS config |
 | 3.2 | **[[setup:traefik|Traefik & dnsmasq]]** | Wildcard DNS, HTTP routing, dashboard Basic Auth, step-by-step deploy |
 | 3.3 | **[[setup:gitea|Gitea — Self-Hosted Git]]** | Git server, Postgres, SSH push, web installer, healthcheck |
-| 3.4 | **[[setup:immich|Immich — Photo Management]]** | Photo server, ML container, Redis, Postgres, mobile app |
-| 3.5 | **[[setup:stirling|Stirling PDF — PDF Tools]]** | Merge, split, compress, OCR — all processed locally |
-| 3.6 | **[[setup:wiki|DokuWiki — This Wiki]]** | How this wiki was built, markup reference, export to PDF |
+| 3.4 | **[[setup:stirling|Stirling PDF — PDF Tools]]** | Merge, split, compress, OCR — all processed locally |
+| 3.5 | **[[setup:wiki|DokuWiki — This Wiki]]** | How this wiki was built, markup reference, export to PDF |
+| 3.6 | **[[setup:portainer|Portainer — Container Management]]** | Web UI for managing all Docker containers, images, and stacks |
 
 ----
 
@@ -28,7 +28,6 @@ Docker · Traefik · dnsmasq · Gitea · Immich · Stirling PDF · DokuWiki
   * [[problem#traefik_reverse_proxy|Traefik — Reverse Proxy]]
   * [[problem#dnsmasq_dns_resolver|dnsmasq — DNS Resolver]]
   * [[problem#gitea_self-hosted_git|Gitea — Self-Hosted Git]]
-  * [[problem#immich_photo_management|Immich — Photo Management]]
   * [[problem#stirling_pdf_pdf_tools|Stirling PDF — PDF Tools]]
   * [[problem#dokuwiki_documentation|DokuWiki — Documentation]]
   * [[problem#references|References]]
@@ -79,16 +78,7 @@ Docker · Traefik · dnsmasq · Gitea · Immich · Stirling PDF · DokuWiki
   * [[setup:gitea#healthcheck_details|Healthcheck Details]]
   * [[setup:gitea#troubleshooting|Troubleshooting]]
 
-==== 3.4 Immich — Photo Management ====
-
-→ **[[setup:immich|Open page]]**
-
-  * [[setup:immich#container_architecture|Container Architecture]]
-  * [[setup:immich#step-by-step_deployment|Step-by-Step Deployment]]
-  * [[setup:immich#database_note|Database Note (pgvecto.rs)]]
-  * [[setup:immich#troubleshooting|Troubleshooting]]
-
-==== 3.5 Stirling PDF — PDF Tools ====
+==== 3.4 Stirling PDF — PDF Tools ====
 
 → **[[setup:stirling|Open page]]**
 
@@ -96,13 +86,22 @@ Docker · Traefik · dnsmasq · Gitea · Immich · Stirling PDF · DokuWiki
   * [[setup:stirling#common_operations_walkthrough|Common Operations Walkthrough]]
   * [[setup:stirling#troubleshooting|Troubleshooting]]
 
-==== 3.6 DokuWiki — This Wiki ====
+==== 3.5 DokuWiki — This Wiki ====
 
 → **[[setup:wiki|Open page]]**
 
   * [[setup:wiki#step-by-step_deployment|Step-by-Step Deployment]]
   * [[setup:wiki#dokuwiki_markup_reference|Markup Reference]]
   * [[setup:wiki#exporting_the_wiki_to_pdf|Exporting to PDF]]
+
+==== 3.6 Portainer — Container Management ====
+
+→ **[[setup:portainer|Open page]]**
+
+  * [[setup:portainer#what_portainer_provides|What Portainer Provides]]
+  * [[setup:portainer#step-by-step_deployment|Step-by-Step Deployment]]
+  * [[setup:portainer#using_portainer|Using Portainer]]
+  * [[setup:portainer#troubleshooting|Troubleshooting]]
 
 ----
 
@@ -111,6 +110,6 @@ Docker · Traefik · dnsmasq · Gitea · Immich · Stirling PDF · DokuWiki
 ^ Service        ^ URL                          ^ Version       ^
 | Traefik        | [[http://traefik.local]]     | v2.11         |
 | Gitea          | [[http://gitea.local]]       | 1.22.3        |
-| Immich         | [[http://immich.local]]      | v1.117.0      |
 | Stirling PDF   | [[http://stirling.local]]    | 0.38.1        |
 | DokuWiki       | [[http://wiki.local]]        | 2024-02-06a   |
+| Portainer      | [[http://pt.local]]          | CE latest     |
