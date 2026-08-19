@@ -1,18 +1,16 @@
 # Home Lab Server
 
-Final milestone (PMF, W13) — Data Communications / Linux System Administration @ UJ (IT28X97).
-
 A self-hosted home server stack running in a VirtualBox Ubuntu VM. All services are Docker containers routed through Traefik with wildcard DNS from dnsmasq.
 
 ## Stack
 
-| Service | URL | Version |
-|---|---|---|
-| Traefik + dnsmasq | http://traefik.local | v2.11 |
-| Gitea | http://gitea.local | 1.22.3 |
-| Immich | http://immich.local | v1.117.0 |
-| Stirling PDF | http://stirling.local | 0.38.1 |
-| DokuWiki | http://wiki.local | 2024-02-06a |
+| Service           | URL                   | Version     |
+| ----------------- | --------------------- | ----------- |
+| Traefik + dnsmasq | http://traefik.local  | v2.11       |
+| Gitea             | http://gitea.local    | 1.22.3      |
+| Immich            | http://immich.local   | v1.117.0    |
+| Stirling PDF      | http://stirling.local | 0.38.1      |
+| DokuWiki          | http://wiki.local     | 2024-02-06a |
 
 ## Quick Start
 
